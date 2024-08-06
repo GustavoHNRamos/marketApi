@@ -91,22 +91,28 @@ export const GetAllSaidas = async function (req, res) {
       return response(res, true, "Não possui permissão para aceder rota.");
     }
 
-    const listar = await prisma.mercados.findMany();
+    const listar = await prisma.saida_produto.findMany();
     if (!listar.length) {
       res.status(404);
-      return response(res, true, "Não existe nenhum mercado criado");
+      return response(res, true, "Não existe nenhuma saída criada");
     }
 
     return response(
       res,
       false,
-      "Todos mercados encontrados.",
+      "Todas saídas encontrados.",
       listar.length,
       listar
     );
   } catch (err) {
     res.status(500);
-    return response(res, true, "Erro", undefined, err);
+    return response(
+      res,
+      true,
+      "Não foi possível listar as saídas",
+      undefined,
+      err
+    );
   }
 };
 
@@ -125,17 +131,17 @@ export const GetSaidaById = async function (req, res) {
 
     const id = Number(req.params.id);
 
-    const listarPorId = await prisma.mercados.findMany({
+    const listarPorId = await prisma.saida_produto.findMany({
       where: { id },
     });
     if (!listarPorId.length) {
-      return response(res, true, "Não existe mercado com este id.");
+      return response(res, true, "Não existe saída registrada com este id.");
     }
 
     return response(
       res,
       false,
-      "Mercado encontrado.",
+      "Saída encontrada.",
       listarPorId.length,
       listarPorId
     );
@@ -144,7 +150,7 @@ export const GetSaidaById = async function (req, res) {
     return response(
       res,
       true,
-      "Não foi possível encontar mercado.",
+      "Não foi possível encontar saída.",
       undefined,
       err
     );
@@ -166,31 +172,42 @@ export const GetSaidaByProdutoId = async function (req, res) {
 
     const id = Number(req.params.id);
 
-    const setorExiste = await prisma.setores.findMany({
+    const produtoExiste = await prisma.produtos.findMany({
       where: { id },
     });
-    if (!setorExiste.length) {
-      return response(res, true, "Não existe setor com este id.");
+    if (!produtoExiste.length) {
+      return response(res, true, "Não existe produto com este id.");
     }
 
-    const listarPorSetorId = await prisma.funcionarios.findMany({
-      where: { setorId: id },
+    const listarPorProdutoId = await prisma.saida_produto.findMany({
+      where: { produtoId: id },
     });
-    if (!listarPorSetorId.length) {
+    if (!listarPorProdutoId.length) {
       res.status(400);
-      return response(res, true, "Não existe funcionário nesse setor.");
+      return response(res, true, "Não existe saída para este produto.");
     }
+
+    const data = {
+      produto: produtoExiste,
+      saidas: listarPorProdutoId,
+    };
 
     return response(
       res,
       false,
-      "Funcionário encontrado.",
-      listarPorSetorId.length,
-      listarPorSetorId
+      "Saídas encontradas.",
+      listarPorProdutoId.length,
+      data
     );
   } catch (err) {
     console.log(err);
-    return response(res, true, "Funcionário não encontrado.", undefined, err);
+    return response(
+      res,
+      true,
+      "Não foi possível encontrar saídas.",
+      undefined,
+      err
+    );
   }
 };
 
@@ -262,19 +279,18 @@ export const DeleteSaidaById = async function (req, res) {
 
     const id = Number(req.params.id);
 
-    const listar = await prisma.mercados.findMany({
+    const listar = await prisma.saida_produto.findFirst({
       where: { id },
     });
-
-    if (!listar.length) {
-      return response(res, true, "Não existe mercado com este id.");
+    if (!listar) {
+      return response(res, true, "Não existe saída com este id.");
     }
 
-    const apagar = await prisma.mercados.delete({
+    const apagar = await prisma.saida_produto.delete({
       where: { id },
     });
 
-    return response(res, false, "Mercado excluído com sucesso.", undefined, {
+    return response(res, false, "Saída excluído com sucesso.", undefined, {
       id,
     });
   } catch (err) {
@@ -282,7 +298,7 @@ export const DeleteSaidaById = async function (req, res) {
     return response(
       res,
       true,
-      "Não foi possível excluir o mercado.",
+      "Não foi possível excluir a saída.",
       undefined,
       err
     );
