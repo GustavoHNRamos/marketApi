@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./db/market.db"
+}
+
+model mercados {
+  id                Int               @id @default(autoincrement())
+  nome              String  
+  endereco          String 
+  status            String
+  setores           setores[]
+  vendas            vendas[]
+  estoques          estoque[]
+}
+
+model setores {
+  id                Int               @id @default(autoincrement())
+  mercado           mercados          @relation(fields: [mercadoId], references: [id])
+  mercadoId         Int
+  nome              String
+  status            String
+  funcionarios      funcionarios[]
+}
+
+model funcionarios {
+  id                Int               @id @default(autoincrement())
+  setor             setores           @relation(fields: [setorId], references: [id])
+  setorId           Int
+  nome              String
+  idade             Int
+  documento         String
+  salario           Float
+  vendas            vendas[]
+}
+
+model vendas {
+  id                Int               @id @default(autoincrement())
+  mercado           mercados          @relation(fields: [mercadoId], references: [id])
+  mercadoId         Int
+  funcionario       funcionarios      @relation(fields: [funcionarioId], references: [id])
+  funcionarioId     Int
+  produtos          String
+  valor             Float
+  metodoPagamento   String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model venda_produto {
+  vendaId   Int
+  produtoId Int
+  // venda     vendas   @relation(fields: [vendaId], references: [id])
+  // produto   produtos @relation(fields: [produtoId], references: [id])
+  @@id([vendaId, produtoId])
+}
+
+model users {
+  id                Int               @id @default(autoincrement())
+  nome              String
+  email             String            @unique
+  senha             String
+  role              String
+  resetToken        String            @default("")
+  // perguntar se não existe outro jeito      ↴
+  resetExp          DateTime          @default(now())
+}
+
+model estoque {
+  id                Int               @id @default(autoincrement())
+  mercado           mercados          @relation(fields: [mercadoId], references: [id])
+  mercadoId         Int
+  nome              String
+  status            String
+  produtos          produtos[]
+}
+
+model produtos {
+  id                Int               @id @default(autoincrement())
+  estoque           estoque           @relation(fields: [estoqueId], references: [id])  
+  estoqueId         Int
+  status            Int?
+  nome              String
+  valor             Float
+  quantidade        Int
+  quantidade_min    Int?
+  quantidade_max    Int?
+  entrada_produto   entrada_produto[]
+  saida_produto     saida_produto[]
+  // vendas            vendas[]
+}
+
+model entrada_produto {
+  id                Int               @id @default(autoincrement())
+  produto           produtos          @relation(fields: [produtoId], references: [id])  
+  produtoId         Int
+  quantidade        Int
+  data_entrada      DateTime          @default(now())
+  valor             Float
+}
+
+model saida_produto {
+  id                Int               @id @default(autoincrement())
+  produto           produtos          @relation(fields: [produtoId], references: [id])  
+  produtoId         Int
+  quantidade        Int
+  data_saida        DateTime          @default(now())
+  valor             Float
+}
